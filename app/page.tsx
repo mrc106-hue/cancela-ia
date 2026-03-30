@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 
 export default function Home() {
@@ -9,9 +8,7 @@ export default function Home() {
     const reveals = document.querySelectorAll('.reveal')
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible')
-        }
+        if (entry.isIntersecting) entry.target.classList.add('visible')
       })
     }, { threshold: 0.1 })
     reveals.forEach(el => observer.observe(el))
@@ -24,220 +21,463 @@ export default function Home() {
 
   return (
     <>
-      {/* NAV */}
+      {/* ═══ NAV ═══ */}
       <nav className="nav">
         <div className="nav-inner">
-          <a href="/" className="nav-logo">CancelaIA</a>
+          <Link href="/" className="nav-logo">CancelaIA</Link>
           <ul className="nav-links">
-            <li><a href="#features" onClick={e => { e.preventDefault(); scrollTo('features') }}>Funciones</a></li>
-            <li><a href="#how" onClick={e => { e.preventDefault(); scrollTo('how') }}>Como funciona</a></li>
-            <li><a href="#pricing" onClick={e => { e.preventDefault(); scrollTo('pricing') }}>Precios</a></li>
+            <li><a onClick={() => scrollTo('features')}>Funciones</a></li>
+            <li><a onClick={() => scrollTo('how')}>Como funciona</a></li>
+            <li><a onClick={() => scrollTo('pricing')}>Precios</a></li>
           </ul>
-          <Link href="/registro" className="nav-cta">Empezar gratis</Link>
+          <Link href="/login" className="nav-cta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Entrar
+          </Link>
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* ═══ HERO ═══ */}
       <section className="hero">
+        <div className="hero-orb-1" />
+        <div className="hero-orb-2" />
         <div className="container hero-grid">
-          <div className="hero-text">
-            <span className="hero-badge">Nuevo: Deteccion automatica de renovaciones</span>
-            <h1>Deja de pagar por lo que no usas</h1>
-            <p>CancelaIA escanea tus emails, detecta todas tus suscripciones activas y te permite cancelarlas con un solo clic. Ahorra hasta 200 euros al mes.</p>
-            <div className="hero-buttons">
-              <Link href="/registro" className="btn-primary">Escanear mis suscripciones</Link>
-              <button className="btn-secondary" onClick={() => scrollTo('how')}>Ver demo</button>
+          <div className="hero-content">
+            <div className="hero-badge hero-animate-1">
+              <span className="hero-badge-dot" />
+              IA de ultima generacion
+            </div>
+            <h1 className="hero-animate-2">
+              Deja de pagar <br />
+              por lo que <span className="gradient-text">no usas</span>
+            </h1>
+            <p className="hero-subtitle hero-animate-3">
+              CancelaIA escanea tu correo con inteligencia artificial, detecta todas tus
+              suscripciones activas y te permite cancelarlas al instante. Ahorra hasta 200€ al mes.
+            </p>
+            <div className="hero-buttons hero-animate-4">
+              <Link href="/login" className="btn btn-primary btn-lg">
+                Escanear mis suscripciones
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </Link>
+              <button className="btn btn-secondary btn-lg" onClick={() => scrollTo('how')}>
+                Ver como funciona
+              </button>
+            </div>
+            <div className="hero-stats hero-animate-5">
+              <div>
+                <div className="hero-stat-value">847€</div>
+                <div className="hero-stat-label">Ahorro medio anual</div>
+              </div>
+              <div>
+                <div className="hero-stat-value">12.5K+</div>
+                <div className="hero-stat-label">Usuarios activos</div>
+              </div>
+              <div>
+                <div className="hero-stat-value">30s</div>
+                <div className="hero-stat-label">Cancelacion media</div>
+              </div>
             </div>
           </div>
-          <div className="hero-image reveal">
-            <Image
-              src="/images/hero-dashboard.jpg"
-              alt="Dashboard CancelaIA mostrando suscripciones"
-              width={600}
-              height={400}
-              priority
-              style={{ borderRadius: '16px', boxShadow: '0 20px 60px rgba(108,58,255,0.3)' }}
-            />
+
+          <div className="hero-visual">
+            <div className="hero-mockup">
+              <div style={{ padding: '20px', background: 'var(--bg-elevated)' }}>
+                {/* Simulated dashboard header */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#EF4444' }} />
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#F59E0B' }} />
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#22C55E' }} />
+                </div>
+                {/* Simulated subscription list */}
+                {[
+                  { name: 'Netflix', price: '15.99€', color: '#E50914', status: 'active' },
+                  { name: 'Spotify', price: '9.99€', color: '#1DB954', status: 'active' },
+                  { name: 'Adobe CC', price: '59.99€', color: '#FF0000', status: 'cancelled' },
+                  { name: 'ChatGPT', price: '20.00€', color: '#10A37F', status: 'active' },
+                  { name: 'Figma', price: '12.00€', color: '#A259FF', status: 'cancelled' },
+                ].map((sub, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 16px', marginBottom: 8,
+                    background: 'var(--bg-card)', borderRadius: 10,
+                    border: '1px solid var(--border)',
+                    opacity: sub.status === 'cancelled' ? 0.5 : 1,
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: `${sub.color}20`, color: sub.color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 14, fontWeight: 700,
+                    }}>
+                      {sub.name[0]}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{sub.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {sub.status === 'cancelled' ? 'Cancelada' : 'Activa'}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'Space Grotesk' }}>
+                      {sub.price}
+                    </div>
+                    {sub.status === 'cancelled' ? (
+                      <div style={{
+                        padding: '4px 10px', borderRadius: 6,
+                        background: 'rgba(16,185,129,0.1)', color: '#10B981',
+                        fontSize: 10, fontWeight: 600,
+                      }}>AHORRADO</div>
+                    ) : (
+                      <div style={{
+                        padding: '4px 10px', borderRadius: 6,
+                        background: 'rgba(244,63,94,0.1)', color: '#F43F5E',
+                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      }}>CANCELAR</div>
+                    )}
+                  </div>
+                ))}
+                {/* Savings summary */}
+                <div style={{
+                  marginTop: 16, padding: '14px 16px', borderRadius: 10,
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05))',
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Ahorro mensual</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Space Grotesk', color: '#10B981' }}>+71.99€</div>
+                </div>
+              </div>
+              <div className="hero-mockup-overlay" />
+            </div>
+
+            {/* Floating cards */}
+            <div className="hero-float-card card-1">
+              <div className="hero-float-icon green">✓</div>
+              <div>
+                <div className="hero-float-title">Adobe cancelada</div>
+                <div className="hero-float-sub">Ahorro: 59.99€/mes</div>
+              </div>
+            </div>
+            <div className="hero-float-card card-2">
+              <div className="hero-float-icon blue">🔍</div>
+              <div>
+                <div className="hero-float-title">8 suscripciones</div>
+                <div className="hero-float-sub">Detectadas por IA</div>
+              </div>
+            </div>
+            <div className="hero-float-card card-3">
+              <div className="hero-float-icon red">⚠</div>
+              <div>
+                <div className="hero-float-title">Renovacion en 3 dias</div>
+                <div className="hero-float-sub">Spotify Premium</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="stats reveal">
-        <div className="stat">
-          <div className="stat-number">847&euro;</div>
-          <div className="stat-label">Ahorro medio anual</div>
-        </div>
-        <div className="stat">
-          <div className="stat-number">12.5K+</div>
-          <div className="stat-label">Usuarios activos</div>
-        </div>
-        <div className="stat">
-          <div className="stat-number">98%</div>
-          <div className="stat-label">Tasa de cancelacion exitosa</div>
-        </div>
-        <div className="stat">
-          <div className="stat-number">30 seg</div>
-          <div className="stat-label">Tiempo medio de cancelacion</div>
+      {/* ═══ BRANDS ═══ */}
+      <section className="brands reveal">
+        <div className="container">
+          <div className="brands-title">Detectamos suscripciones de mas de 500 servicios</div>
+          <div className="brands-grid">
+            {['Netflix', 'Spotify', 'Amazon', 'Disney+', 'Adobe', 'Apple', 'Google', 'Microsoft'].map(b => (
+              <span key={b}>{b}</span>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section id="features" className="features">
+      {/* ═══ FEATURES ═══ */}
+      <section id="features" className="section section-elevated">
         <div className="container">
-          <div className="section-label reveal">Funciones</div>
-          <h2 className="section-title reveal">Todo lo que necesitas para controlar tus gastos</h2>
-          <p className="section-subtitle reveal">Herramientas inteligentes que trabajan por ti las 24 horas del dia</p>
+          <div className="section-label reveal">
+            <span className="section-label-dot" /> Funciones
+          </div>
+          <h2 className="section-title reveal">Todo el control sobre tus gastos recurrentes</h2>
+          <p className="section-subtitle reveal">
+            Herramientas inteligentes que trabajan 24/7 para que nunca pagues de mas
+          </p>
           <div className="features-grid">
-            <div className="feature-card reveal">
-              <div className="feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6C3AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            {[
+              {
+                icon: '📧', iconClass: '', title: 'Escaneo inteligente de email',
+                desc: 'Conecta tu correo y nuestra IA detecta automaticamente todas las suscripciones, incluyendo las que habias olvidado.',
+              },
+              {
+                icon: '⚡', iconClass: 'cyan', title: 'Cancelacion instantanea',
+                desc: 'Sin formularios ni llamadas. Cancela cualquier suscripcion directamente desde el panel en un solo clic.',
+              },
+              {
+                icon: '📊', iconClass: 'green', title: 'Monitor de gastos en tiempo real',
+                desc: 'Visualiza cuanto gastas al mes con graficos interactivos. Identifica donde puedes ahorrar mas.',
+              },
+              {
+                icon: '🔔', iconClass: 'amber', title: 'Alertas de renovacion',
+                desc: 'Recibe notificaciones antes de que se renueven. Nunca mas te cobraran por algo que no quieres.',
+              },
+              {
+                icon: '🔒', iconClass: 'rose', title: 'Seguridad de grado bancario',
+                desc: 'Cifrado de extremo a extremo. Solo leemos recibos de suscripciones, nunca tu informacion personal.',
+              },
+              {
+                icon: '🤖', iconClass: '', title: 'Recomendaciones con IA',
+                desc: 'Analisis inteligente de tus patrones de uso. Te sugerimos que cancelar basandonos en datos reales.',
+              },
+            ].map((f, i) => (
+              <div key={i} className={`card feature-card feature-card-enhanced reveal reveal-delay-${i + 1}`}>
+                <div className={`feature-icon-wrap feature-icon-large ${f.iconClass}`}>{f.icon}</div>
+                <h3>{f.title}</h3>
+                <p>{f.desc}</p>
               </div>
-              <h3>Escaneo de emails</h3>
-              <p>Conecta tu email y nuestro motor de IA detecta automaticamente todas las suscripciones activas, incluyendo las que habias olvidado.</p>
-            </div>
-            <div className="feature-card reveal">
-              <div className="feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6C3AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              </div>
-              <h3>Cancelacion con un clic</h3>
-              <p>Sin formularios complicados ni llamadas telefonicas. Cancela cualquier suscripcion directamente desde nuestro panel en segundos.</p>
-            </div>
-            <div className="feature-card reveal">
-              <div className="feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6C3AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <h3>Monitor de gastos</h3>
-              <p>Visualiza cuanto gastas al mes en suscripciones con graficos claros. Identifica donde puedes ahorrar mas dinero.</p>
-            </div>
-            <div className="feature-card reveal">
-              <div className="feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6C3AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-              </div>
-              <h3>Alertas de renovacion</h3>
-              <p>Recibe notificaciones antes de que se renueve una suscripcion. Nunca mas te cobraran por algo que no quieres.</p>
-            </div>
-            <div className="feature-card reveal">
-              <div className="feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6C3AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              </div>
-              <h3>100% Seguro</h3>
-              <p>Tus datos estan cifrados de extremo a extremo. Nunca almacenamos credenciales ni accedemos a tu informacion personal.</p>
-            </div>
-            <div className="feature-card reveal">
-              <div className="feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6C3AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-              </div>
-              <h3>Informes mensuales</h3>
-              <p>Recibe un resumen mensual con tu ahorro acumulado, nuevas suscripciones detectadas y recomendaciones personalizadas.</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section id="how" className="how-it-works">
+      {/* ═══ HOW IT WORKS ═══ */}
+      <section id="how" className="section section-dark">
         <div className="container">
-          <div className="section-label reveal">Como funciona</div>
-          <h2 className="section-title reveal">Tres pasos y listo</h2>
-          <p className="section-subtitle reveal">Empieza a ahorrar en menos de 2 minutos</p>
-          <div className="how-grid">
-            <div className="steps">
-              <div className="step reveal">
-                <div className="step-number">1</div>
-                <div>
-                  <h3>Conecta tu email</h3>
-                  <p>Vincula tu cuenta de correo de forma segura. Solo leemos los recibos y confirmaciones de suscripciones.</p>
-                </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
+            <div>
+              <div className="section-label reveal">
+                <span className="section-label-dot" /> Como funciona
               </div>
-              <div className="step reveal">
-                <div className="step-number">2</div>
-                <div>
-                  <h3>Revisa tus suscripciones</h3>
-                  <p>Te mostramos una lista completa con precios, fechas de renovacion y frecuencia de uso de cada servicio.</p>
-                </div>
-              </div>
-              <div className="step reveal">
-                <div className="step-number">3</div>
-                <div>
-                  <h3>Cancela lo que sobra</h3>
-                  <p>Selecciona las que no quieres y nosotros nos encargamos del proceso de cancelacion automaticamente.</p>
-                </div>
+              <h2 className="section-title reveal">Tres pasos y empieza a ahorrar</h2>
+              <p className="section-subtitle reveal">
+                En menos de 2 minutos tendras el control total sobre tus suscripciones
+              </p>
+              <div className="steps-grid reveal">
+                <div className="steps-line" />
+                {[
+                  {
+                    num: '01', title: 'Conecta tu email',
+                    desc: 'Vincula tu cuenta de Google de forma segura. Solo accedemos a recibos y confirmaciones de suscripciones.',
+                  },
+                  {
+                    num: '02', title: 'Revisa tus suscripciones',
+                    desc: 'Nuestra IA analiza miles de emails en segundos y te muestra una lista completa con precios y frecuencia de uso.',
+                  },
+                  {
+                    num: '03', title: 'Cancela lo que sobra',
+                    desc: 'Selecciona las que no quieres y nosotros nos encargamos del proceso de cancelacion automaticamente.',
+                  },
+                ].map((s, i) => (
+                  <div key={i} className="step-item">
+                    <div className="step-number">{s.num}</div>
+                    <div className="step-content">
+                      <h3>{s.title}</h3>
+                      <p>{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="how-image reveal">
-              <Image
-                src="/images/how-it-works.jpg"
-                alt="Como funciona CancelaIA"
-                width={550}
-                height={400}
-                style={{ borderRadius: '16px', boxShadow: '0 16px 48px rgba(108,58,255,0.2)' }}
-              />
+            <div className="reveal" style={{ display: 'flex', justifyContent: 'center' }}>
+              {/* Scan animation mockup */}
+              <div className="scan-container" style={{ maxWidth: 400, width: '100%' }}>
+                <div className="scan-line active" />
+                <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: '50%', margin: '0 auto 16px',
+                    background: 'var(--primary-soft)', border: '2px solid rgba(124,58,237,0.2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 32,
+                  }}>📧</div>
+                  <div style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '1.2rem' }}>
+                    Escaneando emails...
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 4 }}>
+                    Analizando 2,847 emails
+                  </div>
+                </div>
+                {/* Progress items */}
+                {[
+                  { name: 'Netflix', status: 'found', price: '15.99€' },
+                  { name: 'Spotify Premium', status: 'found', price: '9.99€' },
+                  { name: 'Adobe Creative Cloud', status: 'found', price: '59.99€' },
+                  { name: 'Amazon Prime', status: 'scanning', price: '...' },
+                ].map((item, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', marginTop: 8,
+                    background: item.status === 'found' ? 'rgba(16,185,129,0.05)' : 'rgba(124,58,237,0.05)',
+                    border: `1px solid ${item.status === 'found' ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.15)'}`,
+                    borderRadius: 10,
+                    animation: item.status === 'scanning' ? 'pulse-glow 2s infinite' : 'none',
+                  }}>
+                    <div style={{ fontSize: 16 }}>
+                      {item.status === 'found' ? '✅' : '🔍'}
+                    </div>
+                    <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{item.name}</div>
+                    <div style={{
+                      fontSize: 13, fontWeight: 700, fontFamily: 'Space Grotesk',
+                      color: item.status === 'found' ? 'var(--success)' : 'var(--primary)',
+                    }}>{item.price}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* PRICING */}
-      <section id="pricing" className="pricing">
+      {/* ═══ STATS ═══ */}
+      <section className="section section-elevated">
         <div className="container">
-          <div className="section-label reveal">Precios</div>
-          <h2 className="section-title reveal">Simple y transparente</h2>
-          <p className="section-subtitle reveal">Sin sorpresas. Cancela cuando quieras.</p>
-          <div className="pricing-cards">
-            <div className="pricing-card reveal">
-              <h3>Gratis</h3>
-              <div className="price">0&euro;<span>/mes</span></div>
-              <ul>
-                <li>Escaneo basico de emails</li>
-                <li>Hasta 5 suscripciones</li>
-                <li>Alertas de renovacion</li>
-                <li>Panel de control basico</li>
-              </ul>
-              <Link href="/registro" className="pricing-btn">Empezar gratis</Link>
+          <div className="stats-grid reveal">
+            {[
+              { value: '847€', label: 'Ahorro medio anual', color: 'green' },
+              { value: '12.5K+', label: 'Usuarios activos', color: 'purple' },
+              { value: '98%', label: 'Tasa de exito', color: 'cyan' },
+              { value: '30 seg', label: 'Cancelacion media', color: 'amber' },
+            ].map((s, i) => (
+              <div key={i} className="stat-card">
+                <div className={`stat-value ${s.color}`}>{s.value}</div>
+                <div className="stat-label">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ PRICING ═══ */}
+      <section id="pricing" className="section section-dark">
+        <div className="container">
+          <div className="section-label center reveal" style={{ textAlign: 'center' }}>
+            <span className="section-label-dot" /> Precios
+          </div>
+          <h2 className="section-title center reveal">Simple y transparente</h2>
+          <p className="section-subtitle center reveal">Sin sorpresas ni compromisos. Cancela cuando quieras.</p>
+          <div className="pricing-grid">
+            {[
+              {
+                name: 'Gratis', price: '0€', period: '/mes', featured: false,
+                features: ['Escaneo basico', 'Hasta 5 suscripciones', 'Alertas de renovacion', 'Panel basico'],
+                cta: 'Empezar gratis',
+              },
+              {
+                name: 'Pro', price: '9.99€', period: '/mes', featured: true,
+                features: ['Escaneo ilimitado', 'Suscripciones ilimitadas', 'Cancelacion con un clic', 'Informes mensuales', 'Soporte prioritario', 'Recomendaciones IA'],
+                cta: 'Probar 14 dias gratis',
+              },
+              {
+                name: 'Premium', price: '19.99€', period: '/mes', featured: false,
+                features: ['Todo lo de Pro', 'Multi-cuenta (3 emails)', 'API de integracion', 'Manager dedicado', 'SLA 99.9%'],
+                cta: 'Contactar ventas',
+              },
+            ].map((plan, i) => (
+              <div key={i} className={`card pricing-card reveal reveal-delay-${i + 1} ${plan.featured ? 'featured pricing-recommended' : ''}`}>
+                <h3>{plan.name}</h3>
+                <div className="pricing-price">
+                  {plan.price}<span>{plan.period}</span>
+                </div>
+                <ul className="pricing-features">
+                  {plan.features.map((f, j) => (
+                    <li key={j}><span className="pricing-check">✓</span> {f}</li>
+                  ))}
+                </ul>
+                <Link href="/login" className="btn btn-primary" style={{ width: '100%' }}>
+                  {plan.cta}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ TESTIMONIOS ═══ */}
+      <section className="section section-elevated" id="testimonials">
+        <div className="container">
+          <div className="section-label center reveal" style={{ textAlign: 'center' }}>
+            <span className="section-label-dot" /> Testimonios
+          </div>
+          <h2 className="section-title center reveal">
+            Lo que dicen nuestros <span className="gradient-text">usuarios</span>
+          </h2>
+          <p className="section-subtitle center reveal">
+            Más de 12.500 personas ya han recuperado el control de sus suscripciones
+          </p>
+          <div className="testimonials-grid">
+            {/* Testimonio 1 */}
+            <div className="testimonial-card reveal reveal-delay-1">
+              <div className="testimonial-stars">
+                {[1,2,3,4,5].map(s => <span key={s} className="testimonial-star">★</span>)}
+              </div>
+              <p className="testimonial-text">
+                &ldquo;Increíble. En menos de 2 minutos CancelaIA detectó 6 suscripciones que tenía olvidadas.
+                Cancelé 4 de ellas y ahorro más de 80€ al mes. Ojalá lo hubiera descubierto antes.&rdquo;
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar">M</div>
+                <div>
+                  <div className="testimonial-name">María González</div>
+                  <div className="testimonial-role">Diseñadora freelance, Madrid</div>
+                </div>
+              </div>
+              <div className="testimonial-savings">💚 Ahorro mensual: +82€/mes</div>
             </div>
-            <div className="pricing-card featured reveal">
-              <h3>Pro</h3>
-              <div className="price">9.99&euro;<span>/mes</span></div>
-              <ul>
-                <li>Escaneo ilimitado</li>
-                <li>Suscripciones ilimitadas</li>
-                <li>Cancelacion con un clic</li>
-                <li>Informes mensuales</li>
-                <li>Soporte prioritario</li>
-              </ul>
-              <Link href="/registro" className="pricing-btn">Probar 14 dias gratis</Link>
+
+            {/* Testimonio 2 */}
+            <div className="testimonial-card reveal reveal-delay-2">
+              <div className="testimonial-stars">
+                {[1,2,3,4,5].map(s => <span key={s} className="testimonial-star">★</span>)}
+              </div>
+              <p className="testimonial-text">
+                &ldquo;Llevaba años pagando por Adobe Creative Cloud sin usarlo. CancelaIA lo detectó
+                automáticamente y gestionó la cancelación por mí. El proceso fue rapidísimo y sin complicaciones.&rdquo;
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar" style={{background: 'linear-gradient(135deg, #EC4899, #7C3AED)'}}>C</div>
+                <div>
+                  <div className="testimonial-name">Carlos Martínez</div>
+                  <div className="testimonial-role">Emprendedor, Barcelona</div>
+                </div>
+              </div>
+              <div className="testimonial-savings">💚 Ahorro mensual: +59€/mes</div>
             </div>
-            <div className="pricing-card reveal">
-              <h3>Empresa</h3>
-              <div className="price">Contactar<span></span></div>
-              <ul>
-                <li>Todo lo de Pro</li>
-                <li>Multi-usuario</li>
-                <li>API de integracion</li>
-                <li>Manager dedicado</li>
-              </ul>
-              <a href="mailto:contacto@cancelaia.com" className="pricing-btn">Contactar ventas</a>
+
+            {/* Testimonio 3 */}
+            <div className="testimonial-card reveal reveal-delay-3">
+              <div className="testimonial-stars">
+                {[1,2,3,4,5].map(s => <span key={s} className="testimonial-star">★</span>)}
+              </div>
+              <p className="testimonial-text">
+                &ldquo;Me parecía imposible que una IA pudiera gestionar mis suscripciones mejor que yo.
+                Estaba equivocada. CancelaIA encontró 9 servicios activos y me ayudó a limpiar todo en un día.&rdquo;
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar" style={{background: 'linear-gradient(135deg, #06B6D4, #10B981)'}}>L</div>
+                <div>
+                  <div className="testimonial-name">Laura Sánchez</div>
+                  <div className="testimonial-role">Profesora universitaria, Valencia</div>
+                </div>
+              </div>
+              <div className="testimonial-savings">💚 Ahorro mensual: +134€/mes</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ═══ CTA ═══ */}
       <section className="cta-section">
-        <div className="container reveal">
+        <div className="cta-orb" />
+        <div className="container reveal" style={{ position: 'relative' }}>
           <h2>Empieza a ahorrar hoy</h2>
-          <p>Unete a miles de usuarios que ya han recuperado el control de sus suscripciones</p>
-          <Link href="/registro" className="btn-white">Crear cuenta gratis</Link>
+          <p>Unete a miles de usuarios que ya han recuperado el control de sus gastos recurrentes</p>
+          <Link href="/login" className="btn btn-primary btn-lg">
+            Crear cuenta gratis
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </Link>
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* ═══ FOOTER ═══ */}
       <footer className="footer">
         <div className="container">
           <div className="footer-inner">
             <div className="footer-brand">
-              <h3>CancelaIA</h3>
+              <Link href="/" className="nav-logo" style={{ fontSize: '1.3rem' }}>CancelaIA</Link>
               <p>El gestor inteligente de suscripciones que te ayuda a ahorrar dinero sin esfuerzo.</p>
             </div>
             <div className="footer-col">
@@ -248,7 +488,7 @@ export default function Home() {
             </div>
             <div className="footer-col">
               <h4>Empresa</h4>
-              <a href="mailto:contacto@cancelaia.com">Contacto</a>
+              <a href="mailto:mrc106@gmail.com">Contacto</a>
               <a href="#">Sobre nosotros</a>
               <a href="#">Blog</a>
             </div>
@@ -260,7 +500,7 @@ export default function Home() {
             </div>
           </div>
           <div className="footer-bottom">
-            2024 CancelaIA. Todos los derechos reservados.
+            © 2024 CancelaIA. Todos los derechos reservados.
           </div>
         </div>
       </footer>
