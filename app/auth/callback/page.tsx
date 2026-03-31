@@ -19,6 +19,13 @@ export default function AuthCallback() {
       const { data: { session } } = await supabase.auth.getSession()
 
       if (session) {
+        // Save provider_token to localStorage so it survives session refreshes
+        // Google access tokens expire in 1 hour but are valid for scanning
+        if (session.provider_token) {
+          localStorage.setItem('cancelaia_gmail_token', session.provider_token)
+          localStorage.setItem('cancelaia_gmail_token_exp', String(Date.now() + 55 * 60 * 1000))
+        }
+
         // Ensure user profile exists in DB
         const { data: existing } = await supabase
           .from('cancelaia_users')

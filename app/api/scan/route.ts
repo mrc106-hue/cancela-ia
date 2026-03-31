@@ -11,10 +11,37 @@ function getSupabase() {
   )
 }
 
+const GMAIL_QUERY = [
+  'subject:receipt',
+  'subject:invoice',
+  'subject:factura',
+  'subject:subscription',
+  'subject:suscripcion',
+  'subject:billing',
+  'subject:renewal',
+  'subject:renovacion',
+  'subject:"payment confirmation"',
+  'subject:"confirmacion de pago"',
+  'subject:"your receipt"',
+  'subject:"tu recibo"',
+  'subject:"order confirmation"',
+  'subject:"confirmacion de pedido"',
+  'subject:"payment successful"',
+  'subject:"pago exitoso"',
+  'from:noreply@netflix.com',
+  'from:noreply@spotify.com',
+  'from:no-reply@amazon.es',
+  'from:no-reply@amazon.com',
+  'from:adobe@adobe.com',
+  'from:noreply@openai.com',
+  'from:apple@email.apple.com',
+  'from:noreply@youtube.com',
+  'from:payments-noreply@google.com',
+].join(' OR ')
+
 export async function POST(req: NextRequest) {
   const supabase = getSupabase()
   try {
-    // Verify auth
     const authHeader = req.headers.get('authorization')
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -26,19 +53,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Token invalido' }, { status: 401 })
     }
 
-    // Get user's Google OAuth provider token for Gmail access
-    // In production, you'd use the stored refresh token to get a fresh access token
-    // For now, we'll use the Supabase session's provider_token
-    const { data: sessionData } = await supabase.auth.admin.getUserById(user.id)
+    const body = await req.json().catch(() => ({}))
+    const providerToken: string | undefined = body.provider_token
 
-    // Use Claude AI to analyze subscription patterns
-    // This is a simplified version - in production you'd call Gmail API first
-    const subscriptions = await analyzeWithClaude(user.email || '')
+    const startTime = Date.now()
+
+    let emails: EmailSummary[] = []
+    let usedRealGmail = false
+
+    if (providerToken) {
+      try {
+        emails = await fetchGmailEmails(providerToken)
+        usedRealGmail = true
+      } catch (gmailErr: any) {
+        console.error('[SCAN] Gmail error:', gmailErr.message)
+        // Fall through to demo data if Gmail fails
+      }
+    }
+
+    const subscriptions = emails.length > 0
+      ? await analyzeEmailsWithClaude(emails)
+      : getDemoSubscriptions()
 
     return NextResponse.json({
       subscriptions,
-      scanned_emails: Math.floor(Math.random() * 3000) + 1000,
-      scan_time_ms: Math.floor(Math.random() * 5000) + 2000,
+      scanned_emails: emails.length,
+      scan_time_ms: Date.now() - startTime,
+      used_real_gmail: usedRealGmail,
+      demo_mode: emails.length === 0,
     })
   } catch (err: any) {
     console.error('[SCAN] Error:', err.message)
@@ -46,12 +88,66 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function analyzeWithClaude(userEmail: string): Promise<any[]> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    // Return demo data if no API key
-    return getDemoSubscriptions()
+type EmailSummary = {
+  from: string
+  subject: string
+  date: string
+  snippet: string
+}
+
+async function fetchGmailEmails(providerToken: string): Promise<EmailSummary[]> {
+  const query = encodeURIComponent(`(${GMAIL_QUERY}) newer_than:12m`)
+
+  const listRes = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=100`,
+    { headers: { Authorization: `Bearer ${providerToken}` } },
+  )
+
+  if (!listRes.ok) {
+    const errText = await listRes.text()
+    throw new Error(`Gmail API error ${listRes.status}: ${errText.slice(0, 200)}`)
   }
+
+  const listData = await listRes.json()
+  const messages: Array<{ id: string }> = listData.messages || []
+  if (messages.length === 0) return []
+
+  // Fetch metadata for up to 40 messages in parallel batches
+  const toFetch = messages.slice(0, 40)
+  const details = await Promise.all(
+    toFetch.map(async (msg) => {
+      try {
+        const res = await fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
+          { headers: { Authorization: `Bearer ${providerToken}` } },
+        )
+        if (!res.ok) return null
+        const data = await res.json()
+        const headers: Array<{ name: string; value: string }> = data.payload?.headers || []
+        const h = (name: string) => headers.find(x => x.name === name)?.value || ''
+        return {
+          from: h('From'),
+          subject: h('Subject'),
+          date: h('Date'),
+          snippet: (data.snippet || '').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&quot;/g, '"'),
+        } as EmailSummary
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return details.filter((d): d is EmailSummary => d !== null)
+}
+
+async function analyzeEmailsWithClaude(emails: EmailSummary[]): Promise<any[]> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return getDemoSubscriptions()
+
+  // Build compact email text for Claude
+  const emailsText = emails
+    .map((e, i) => `[${i + 1}] From: ${e.from}\nSubject: ${e.subject}\nDate: ${e.date}\nPreview: ${e.snippet?.slice(0, 200)}`)
+    .join('\n---\n')
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -63,23 +159,56 @@ async function analyzeWithClaude(userEmail: string): Promise<any[]> {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
+        max_tokens: 2048,
         messages: [{
           role: 'user',
-          content: `Genera una lista realista de 5-8 suscripciones digitales tipicas que un usuario espanol podria tener.
-Para cada una incluye: name, price (en euros, numero), currency ("EUR"), period ("monthly" o "yearly"), category (Streaming, Productividad, Gaming, Cloud, etc.), confidence (0.8-0.99).
-Responde SOLO con un JSON array, sin texto adicional.`,
+          content: `Eres un asistente que analiza emails para detectar suscripciones de pago recurrente.
+
+Analiza estos emails y extrae TODAS las suscripciones unicas con pagos recurrentes (streaming, software, cloud, gaming, musica, productividad, IA, etc).
+
+Para cada suscripcion incluye:
+- name: nombre del servicio (ej: "Netflix Premium", "Spotify", "Adobe Creative Cloud")
+- price: precio numerico exacto (extrae del email, si no hay pon el tipico para ese servicio)
+- currency: "EUR" o "USD" segun el email
+- period: "monthly" o "yearly" o "weekly"
+- category: "Streaming" | "Musica" | "Gaming" | "Productividad" | "Cloud" | "IA" | "Compras" | "Otro"
+- confidence: numero 0.0-1.0 (cuanto confias en la deteccion)
+- detected_from: email del remitente
+
+Reglas:
+- EXCLUYE compras unicas (Amazon compras, etc) a menos que sea Prime/suscripcion
+- EXCLUYE emails de marketing sin cargo real
+- DEDUPLICA: si hay multiples emails del mismo servicio, incluyelo solo UNA vez
+- Si el precio no esta claro, usa el precio tipico del servicio
+- Responde SOLO con JSON array, sin texto antes o despues
+
+Emails a analizar:
+${emailsText}`,
         }],
       }),
     })
 
-    if (!res.ok) return getDemoSubscriptions()
+    if (!res.ok) {
+      console.error('[SCAN] Claude API error:', res.status)
+      return getDemoSubscriptions()
+    }
 
     const data = await res.json()
-    const text = data.content?.[0]?.text || ''
+    const text: string = data.content?.[0]?.text || ''
     const jsonMatch = text.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0])
+      const parsed = JSON.parse(jsonMatch[0])
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Deduplicate by lowercased name
+        const seen = new Set<string>()
+        return parsed.filter((s: any) => {
+          if (!s.name || typeof s.price !== 'number') return false
+          const key = s.name.toLowerCase()
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      }
     }
   } catch (e) {
     console.error('[SCAN] Claude error:', e)
