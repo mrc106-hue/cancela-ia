@@ -32,7 +32,7 @@ export const CANCEL_INFO: Record<string, CancelInfo> = {
       'Ve a amazon.es → "Cuentas y listas" → "Prime"',
       'Haz clic en "Gestionar membresia Prime"',
       'Selecciona "Finalizar membresia y beneficios"',
-      'Elige "Finalizar mi beneficios ahora" o al final del periodo',
+      'Elige "Finalizar mis beneficios ahora" o al final del periodo',
     ],
     difficulty: 'easy',
     note: 'Puedes obtener reembolso si no has usado Prime recientemente',
@@ -86,6 +86,46 @@ export const CANCEL_INFO: Record<string, CancelInfo> = {
       'Abre ChatGPT y haz clic en tu perfil',
       'Ve a "Configuracion" → "Mi plan"',
       'Haz clic en "Gestionar mi suscripcion"',
+      'Selecciona "Cancelar plan"',
+    ],
+    difficulty: 'easy',
+  },
+  openai: {
+    url: 'https://chat.openai.com/#settings/account',
+    steps: [
+      'Abre ChatGPT y haz clic en tu perfil',
+      'Ve a "Configuracion" → "Mi plan"',
+      'Haz clic en "Gestionar mi suscripcion"',
+      'Selecciona "Cancelar plan"',
+    ],
+    difficulty: 'easy',
+  },
+  claude: {
+    url: 'https://claude.ai/settings',
+    steps: [
+      'Inicia sesion en claude.ai',
+      'Ve a Configuracion → "Plan y uso"',
+      'Haz clic en "Gestionar suscripcion"',
+      'Selecciona "Cancelar plan"',
+    ],
+    difficulty: 'easy',
+  },
+  'claude pro': {
+    url: 'https://claude.ai/settings',
+    steps: [
+      'Inicia sesion en claude.ai',
+      'Ve a Configuracion → "Plan y uso"',
+      'Haz clic en "Gestionar suscripcion"',
+      'Selecciona "Cancelar plan"',
+    ],
+    difficulty: 'easy',
+  },
+  anthropic: {
+    url: 'https://claude.ai/settings',
+    steps: [
+      'Inicia sesion en claude.ai',
+      'Ve a Configuracion → "Plan y uso"',
+      'Haz clic en "Gestionar suscripcion"',
       'Selecciona "Cancelar plan"',
     ],
     difficulty: 'easy',
@@ -194,6 +234,16 @@ export const CANCEL_INFO: Record<string, CancelInfo> = {
     steps: [
       'Ve a github.com → Configuracion → Facturacion y planes',
       'En tu plan actual, haz clic en "Bajar a Free"',
+      'Confirma el cambio',
+    ],
+    difficulty: 'easy',
+  },
+  'github copilot': {
+    url: 'https://github.com/settings/copilot',
+    steps: [
+      'Ve a github.com → Configuracion → GitHub Copilot',
+      'Haz clic en "Gestionar Copilot"',
+      'Selecciona "Cancelar suscripcion"',
       'Confirma el cambio',
     ],
     difficulty: 'easy',
@@ -351,13 +401,257 @@ export const CANCEL_INFO: Record<string, CancelInfo> = {
     ],
     difficulty: 'easy',
   },
+  // IA Tools
+  elevenlabs: {
+    url: 'https://elevenlabs.io/subscription',
+    steps: [
+      'Inicia sesion en elevenlabs.io',
+      'Ve a tu perfil → "Subscription"',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  heygen: {
+    url: 'https://app.heygen.com/settings/billing',
+    steps: [
+      'Inicia sesion en app.heygen.com',
+      'Ve a Settings → Billing',
+      'Haz clic en "Cancel Plan"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  runway: {
+    url: 'https://app.runwayml.com/settings/billing',
+    steps: [
+      'Inicia sesion en app.runwayml.com',
+      'Ve a Settings → Billing',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  'runway ml': {
+    url: 'https://app.runwayml.com/settings/billing',
+    steps: [
+      'Inicia sesion en app.runwayml.com',
+      'Ve a Settings → Billing',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  suno: {
+    url: 'https://suno.com/account',
+    steps: [
+      'Inicia sesion en suno.com',
+      'Ve a tu cuenta → "Subscription"',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  'suno pro': {
+    url: 'https://suno.com/account',
+    steps: [
+      'Inicia sesion en suno.com',
+      'Ve a tu cuenta → "Subscription"',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  midjourney: {
+    url: 'https://www.midjourney.com/account/',
+    steps: [
+      'Ve a midjourney.com/account',
+      'Haz clic en "Manage Subscription"',
+      'Selecciona "Cancel Plan"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  perplexity: {
+    url: 'https://www.perplexity.ai/settings/account',
+    steps: [
+      'Inicia sesion en perplexity.ai',
+      'Ve a Settings → Account',
+      'Haz clic en "Manage subscription"',
+      'Selecciona "Cancel subscription"',
+    ],
+    difficulty: 'easy',
+  },
+  cursor: {
+    url: 'https://cursor.sh/settings',
+    steps: [
+      'Inicia sesion en cursor.sh',
+      'Ve a Settings → Billing',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  // Cloud & Hosting
+  supabase: {
+    url: 'https://supabase.com/dashboard/account/billing',
+    steps: [
+      'Inicia sesion en supabase.com/dashboard',
+      'Ve a tu organizacion → Settings → Billing',
+      'Haz clic en "Downgrade to Free"',
+      'Confirma el cambio',
+    ],
+    difficulty: 'easy',
+    note: 'Si tienes proyectos en plan Pro, seran pausados al cambiar a Free',
+  },
+  'supabase pro': {
+    url: 'https://supabase.com/dashboard/account/billing',
+    steps: [
+      'Inicia sesion en supabase.com/dashboard',
+      'Ve a tu organizacion → Settings → Billing',
+      'Haz clic en "Downgrade to Free"',
+      'Confirma el cambio',
+    ],
+    difficulty: 'easy',
+    note: 'Si tienes proyectos en plan Pro, seran pausados al cambiar a Free',
+  },
+  vercel: {
+    url: 'https://vercel.com/account/billing',
+    steps: [
+      'Inicia sesion en vercel.com',
+      'Ve a Account Settings → Billing',
+      'Haz clic en "Downgrade to Hobby"',
+      'Confirma el cambio',
+    ],
+    difficulty: 'easy',
+  },
+  railway: {
+    url: 'https://railway.app/account/billing',
+    steps: [
+      'Inicia sesion en railway.app',
+      'Ve a Account → Billing',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  cloudflare: {
+    url: 'https://dash.cloudflare.com/profile/billing',
+    steps: [
+      'Inicia sesion en dash.cloudflare.com',
+      'Ve a Profile → Billing',
+      'Cancela el plan o servicio especifico',
+    ],
+    difficulty: 'medium',
+  },
+  // Stock Media
+  storyblocks: {
+    url: 'https://www.storyblocks.com/account/membership',
+    steps: [
+      'Inicia sesion en storyblocks.com',
+      'Ve a Account → Membership',
+      'Haz clic en "Cancel membership"',
+      'Sigue el proceso de cancelacion',
+    ],
+    difficulty: 'medium',
+    note: 'Storyblocks puede intentar ofrecerte pausar en lugar de cancelar',
+  },
+  videoblocks: {
+    url: 'https://www.storyblocks.com/account/membership',
+    steps: [
+      'Inicia sesion en storyblocks.com',
+      'Ve a Account → Membership',
+      'Haz clic en "Cancel membership"',
+      'Sigue el proceso de cancelacion',
+    ],
+    difficulty: 'medium',
+  },
+  audioblocks: {
+    url: 'https://www.storyblocks.com/account/membership',
+    steps: [
+      'Inicia sesion en storyblocks.com',
+      'Ve a Account → Membership',
+      'Haz clic en "Cancel membership"',
+      'Sigue el proceso de cancelacion',
+    ],
+    difficulty: 'medium',
+  },
+  // Other common services
+  base44: {
+    url: 'https://base44.com/settings/billing',
+    steps: [
+      'Inicia sesion en base44.com',
+      'Ve a Settings → Billing',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  loom: {
+    url: 'https://www.loom.com/settings/plans',
+    steps: [
+      'Inicia sesion en loom.com',
+      'Ve a Settings → Plans',
+      'Haz clic en "Cancel plan"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'easy',
+  },
+  airtable: {
+    url: 'https://airtable.com/account',
+    steps: [
+      'Inicia sesion en airtable.com',
+      'Ve a Account → Billing',
+      'Haz clic en "Downgrade to Free"',
+      'Confirma el cambio',
+    ],
+    difficulty: 'easy',
+  },
+  monday: {
+    url: 'https://monday.com/account/billing',
+    steps: [
+      'Inicia sesion en monday.com',
+      'Ve a Admin → Billing',
+      'Haz clic en "Cancel plan"',
+      'Sigue el proceso de cancelacion',
+    ],
+    difficulty: 'medium',
+  },
+  asana: {
+    url: 'https://app.asana.com/admin',
+    steps: [
+      'Inicia sesion en asana.com',
+      'Ve a Admin → Billing',
+      'Haz clic en "Cancel subscription"',
+      'Confirma la cancelacion',
+    ],
+    difficulty: 'medium',
+  },
+  todoist: {
+    url: 'https://todoist.com/app/settings/subscription',
+    steps: [
+      'Inicia sesion en todoist.com',
+      'Ve a Settings → Subscription',
+      'Haz clic en "Cancel subscription"',
+    ],
+    difficulty: 'easy',
+  },
+  evernote: {
+    url: 'https://www.evernote.com/client/account',
+    steps: [
+      'Inicia sesion en evernote.com',
+      'Ve a Account → Billing',
+      'Haz clic en "Cancel subscription"',
+    ],
+    difficulty: 'easy',
+  },
 }
 
 export function getCancelInfo(serviceName: string): CancelInfo | null {
   const key = serviceName.toLowerCase().trim()
   // Direct match
   if (CANCEL_INFO[key]) return CANCEL_INFO[key]
-  // Partial match
+  // Partial match: key includes service or service includes key
   for (const [k, v] of Object.entries(CANCEL_INFO)) {
     if (key.includes(k) || k.includes(key)) return v
   }

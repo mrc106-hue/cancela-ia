@@ -11,33 +11,58 @@ function getSupabase() {
   )
 }
 
-const GMAIL_QUERY = [
-  'subject:receipt',
-  'subject:invoice',
-  'subject:factura',
-  'subject:subscription',
-  'subject:suscripcion',
-  'subject:billing',
-  'subject:renewal',
-  'subject:renovacion',
-  'subject:"payment confirmation"',
-  'subject:"confirmacion de pago"',
-  'subject:"your receipt"',
-  'subject:"tu recibo"',
-  'subject:"order confirmation"',
-  'subject:"confirmacion de pedido"',
-  'subject:"payment successful"',
-  'subject:"pago exitoso"',
-  'from:noreply@netflix.com',
-  'from:noreply@spotify.com',
-  'from:no-reply@amazon.es',
-  'from:no-reply@amazon.com',
-  'from:adobe@adobe.com',
-  'from:noreply@openai.com',
-  'from:apple@email.apple.com',
-  'from:noreply@youtube.com',
-  'from:payments-noreply@google.com',
-].join(' OR ')
+// Multiple targeted queries for better coverage across 12 months
+const SEARCH_QUERIES = [
+  // Subject-based: billing keywords
+  'subject:receipt newer_than:12m',
+  'subject:invoice newer_than:12m',
+  'subject:factura newer_than:12m',
+  'subject:subscription newer_than:12m',
+  'subject:suscripcion newer_than:12m',
+  'subject:billing newer_than:12m',
+  'subject:renewal newer_than:12m',
+  'subject:renovacion newer_than:12m',
+  'subject:"payment confirmation" newer_than:12m',
+  'subject:"payment successful" newer_than:12m',
+  'subject:"your receipt" newer_than:12m',
+  'subject:"your invoice" newer_than:12m',
+  'subject:"order confirmation" newer_than:12m',
+  'subject:"charge" newer_than:12m',
+  'subject:"cobro" newer_than:12m',
+  'subject:"cargo" newer_than:12m',
+  'subject:"pago" newer_than:12m',
+  'subject:"tu suscripcion" newer_than:12m',
+  'subject:"your subscription" newer_than:12m',
+  'subject:"plan renewed" newer_than:12m',
+  'subject:"payment received" newer_than:12m',
+  'subject:"thank you for your payment" newer_than:12m',
+  'subject:"gracias por tu pago" newer_than:12m',
+  'subject:"confirmacion de pago" newer_than:12m',
+  // Sender-based: known subscription services
+  '(from:noreply@netflix.com OR from:noreply@spotify.com OR from:no-reply@amazon.com OR from:no-reply@amazon.es) newer_than:12m',
+  '(from:adobe@adobe.com OR from:noreply@openai.com OR from:apple@email.apple.com) newer_than:12m',
+  '(from:noreply@youtube.com OR from:payments-noreply@google.com OR from:no-reply@anthropic.com) newer_than:12m',
+  '(from:billing@supabase.io OR from:noreply@supabase.com OR from:no-reply@supabase.io) newer_than:12m',
+  '(from:heygen.com OR from:runwayml.com OR from:runway.com OR from:elevenlabs.io) newer_than:12m',
+  '(from:suno.com OR from:suno.ai OR from:base44.com) newer_than:12m',
+  '(from:storyblocks.com OR from:videoblocks.com OR from:audioblocks.com) newer_than:12m',
+  '(from:midjourney.com OR from:perplexity.ai OR from:cursor.sh) newer_than:12m',
+  '(from:github.com OR from:vercel.com OR from:railway.app) newer_than:12m',
+  '(from:notion.so OR from:figma.com OR from:canva.com) newer_than:12m',
+  '(from:dropbox.com OR from:slack.com OR from:zoom.us) newer_than:12m',
+  '(from:grammarly.com OR from:linkedin.com) newer_than:12m',
+  '(from:microsoft.com OR from:office.com) newer_than:12m',
+  '(from:cloudflare.com OR from:digitalocean.com OR from:heroku.com) newer_than:12m',
+  '(from:shutterstock.com OR from:gettyimages.com OR from:envato.com) newer_than:12m',
+  '(from:duolingo.com OR from:todoist.com OR from:evernote.com) newer_than:12m',
+]
+
+type EmailSummary = {
+  from: string
+  subject: string
+  date: string
+  snippet: string
+}
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase()
@@ -67,7 +92,6 @@ export async function POST(req: NextRequest) {
         usedRealGmail = true
       } catch (gmailErr: any) {
         console.error('[SCAN] Gmail error:', gmailErr.message)
-        // Fall through to demo data if Gmail fails
       }
     }
 
@@ -88,37 +112,61 @@ export async function POST(req: NextRequest) {
   }
 }
 
-type EmailSummary = {
-  from: string
-  subject: string
-  date: string
-  snippet: string
+async function fetchEmailPage(
+  providerToken: string,
+  query: string,
+  pageToken?: string,
+): Promise<{ messageIds: string[]; nextPageToken?: string }> {
+  const url = new URL('https://gmail.googleapis.com/gmail/v1/users/me/messages')
+  url.searchParams.set('q', query)
+  url.searchParams.set('maxResults', '50')
+  if (pageToken) url.searchParams.set('pageToken', pageToken)
+
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${providerToken}` },
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Gmail API ${res.status}: ${text.slice(0, 200)}`)
+  }
+  const data = await res.json()
+  return {
+    messageIds: (data.messages || []).map((m: { id: string }) => m.id),
+    nextPageToken: data.nextPageToken,
+  }
 }
 
 async function fetchGmailEmails(providerToken: string): Promise<EmailSummary[]> {
-  const query = encodeURIComponent(`(${GMAIL_QUERY}) newer_than:12m`)
+  const allIds = new Set<string>()
 
-  const listRes = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=100`,
-    { headers: { Authorization: `Bearer ${providerToken}` } },
+  // Run all queries in parallel to collect message IDs
+  const queryResults = await Promise.allSettled(
+    SEARCH_QUERIES.map(async (query) => {
+      try {
+        const page1 = await fetchEmailPage(providerToken, query)
+        page1.messageIds.forEach(id => allIds.add(id))
+        // Fetch second page for high-yield queries
+        if (page1.nextPageToken && allIds.size < 600) {
+          const page2 = await fetchEmailPage(providerToken, query, page1.nextPageToken)
+          page2.messageIds.forEach(id => allIds.add(id))
+        }
+      } catch {
+        // Ignore individual query errors
+      }
+    })
   )
 
-  if (!listRes.ok) {
-    const errText = await listRes.text()
-    throw new Error(`Gmail API error ${listRes.status}: ${errText.slice(0, 200)}`)
-  }
+  console.log(`[SCAN] Query results: ${queryResults.length}, unique IDs: ${allIds.size}`)
 
-  const listData = await listRes.json()
-  const messages: Array<{ id: string }> = listData.messages || []
-  if (messages.length === 0) return []
+  if (allIds.size === 0) return []
 
-  // Fetch metadata for up to 40 messages in parallel batches
-  const toFetch = messages.slice(0, 40)
+  // Fetch metadata for up to 250 unique messages — all in parallel
+  const ids = Array.from(allIds).slice(0, 250)
   const details = await Promise.all(
-    toFetch.map(async (msg) => {
+    ids.map(async (id) => {
       try {
         const res = await fetch(
-          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
           { headers: { Authorization: `Bearer ${providerToken}` } },
         )
         if (!res.ok) return null
@@ -144,9 +192,43 @@ async function analyzeEmailsWithClaude(emails: EmailSummary[]): Promise<any[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return getDemoSubscriptions()
 
-  // Build compact email text for Claude
+  // Deduplicate emails: same sender domain + similar subject = one entry
+  const seen = new Set<string>()
+  const deduped = emails.filter(e => {
+    const senderDomain = e.from.match(/@([^>\s]+)/)?.[1]?.toLowerCase() || e.from.toLowerCase().slice(0, 30)
+    const subjectKey = e.subject.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().slice(0, 40)
+    const key = `${senderDomain}::${subjectKey}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  console.log(`[SCAN] Emails after dedup: ${deduped.length} (from ${emails.length})`)
+
+  // Process in batches of 120 to stay within Claude's context
+  const BATCH_SIZE = 120
+  const allSubscriptions: any[] = []
+
+  for (let i = 0; i < deduped.length; i += BATCH_SIZE) {
+    const batch = deduped.slice(i, i + BATCH_SIZE)
+    const batchSubs = await analyzeEmailBatch(apiKey, batch)
+    allSubscriptions.push(...batchSubs)
+  }
+
+  // Final deduplication across batches by normalized service name
+  const seenNames = new Set<string>()
+  return allSubscriptions.filter((s: any) => {
+    if (!s.name || typeof s.price !== 'number') return false
+    const key = s.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+    if (seenNames.has(key)) return false
+    seenNames.add(key)
+    return true
+  })
+}
+
+async function analyzeEmailBatch(apiKey: string, emails: EmailSummary[]): Promise<any[]> {
   const emailsText = emails
-    .map((e, i) => `[${i + 1}] From: ${e.from}\nSubject: ${e.subject}\nDate: ${e.date}\nPreview: ${e.snippet?.slice(0, 200)}`)
+    .map((e, i) => `[${i + 1}] From: ${e.from}\nSubject: ${e.subject}\nDate: ${e.date}\nPreview: ${e.snippet?.slice(0, 150)}`)
     .join('\n---\n')
 
   try {
@@ -158,29 +240,37 @@ async function analyzeEmailsWithClaude(emails: EmailSummary[]): Promise<any[]> {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4096,
         messages: [{
           role: 'user',
-          content: `Eres un asistente que analiza emails para detectar suscripciones de pago recurrente.
+          content: `Eres un experto en deteccion de suscripciones y pagos recurrentes. Analiza estos emails y extrae TODAS las suscripciones activas.
 
-Analiza estos emails y extrae TODAS las suscripciones unicas con pagos recurrentes (streaming, software, cloud, gaming, musica, productividad, IA, etc).
+INCLUYE sin excepcion:
+- Streaming: Netflix, Spotify, Disney+, HBO/Max, Hulu, Apple TV+, Paramount+, Twitch
+- Software/SaaS: Adobe, Microsoft 365, Figma, Notion, Canva, Slack, Zoom, Grammarly, Dropbox, GitHub, Airtable, Monday, Asana, Todoist
+- IA y ML: Claude/Anthropic, ChatGPT/OpenAI, Midjourney, ElevenLabs, HeyGen, Runway ML, Suno, Perplexity, Cursor, GitHub Copilot, Jasper
+- Cloud y hosting: AWS, Google Cloud, Azure, Vercel, Railway, Supabase, Cloudflare, DigitalOcean, Heroku, Hostinger, GoDaddy, Namecheap
+- Stock media: Storyblocks, Shutterstock, Getty Images, Envato, Artlist, Epidemic Sound
+- Productividad/Educacion: Duolingo, LinkedIn Premium, Coursera, Udemy, Skillshare, MasterClass
+- Juegos: Xbox Game Pass, PlayStation Plus, Nintendo Online, Steam, Epic
+- Cualquier otro servicio con cobro mensual o anual (aunque sea desconocido como Base44, herramientas nicho, etc.)
 
-Para cada suscripcion incluye:
-- name: nombre del servicio (ej: "Netflix Premium", "Spotify", "Adobe Creative Cloud")
-- price: precio numerico exacto (extrae del email, si no hay pon el tipico para ese servicio)
-- currency: "EUR" o "USD" segun el email
-- period: "monthly" o "yearly" o "weekly"
+Por cada suscripcion retorna un objeto JSON con:
+- name: nombre exacto del servicio (ej: "Claude Pro", "ElevenLabs Creator", "Storyblocks All-Access", "HeyGen Essential")
+- price: numero con el precio (extrae del email; si no aparece usa el precio tipico del plan detectado)
+- currency: "EUR" o "USD" (usa "USD" para servicios americanos sin moneda explicita)
+- period: "monthly" o "yearly"
 - category: "Streaming" | "Musica" | "Gaming" | "Productividad" | "Cloud" | "IA" | "Compras" | "Otro"
-- confidence: numero 0.0-1.0 (cuanto confias en la deteccion)
-- detected_from: email del remitente
+- confidence: 0.7-1.0 (1.0 = precio exacto en email, 0.8 = deducido de asunto/contexto, 0.7 = solo sender conocido)
+- detected_from: email completo del remitente
 
-Reglas:
-- EXCLUYE compras unicas (Amazon compras, etc) a menos que sea Prime/suscripcion
-- EXCLUYE emails de marketing sin cargo real
-- DEDUPLICA: si hay multiples emails del mismo servicio, incluyelo solo UNA vez
-- Si el precio no esta claro, usa el precio tipico del servicio
-- Responde SOLO con JSON array, sin texto antes o despues
+REGLAS:
+- EXCLUYE compras unicas de Amazon/eBay/tiendas (no suscripciones)
+- EXCLUYE emails de marketing sin confirmar pago
+- DEDUPLICA: si hay varios emails del mismo servicio, pon solo el mas reciente
+- Si el email menciona cancelacion completada, NO lo incluyas
+- Responde UNICAMENTE con un JSON array valido, absolutamente nada mas
 
 Emails a analizar:
 ${emailsText}`,
@@ -190,7 +280,7 @@ ${emailsText}`,
 
     if (!res.ok) {
       console.error('[SCAN] Claude API error:', res.status)
-      return getDemoSubscriptions()
+      return []
     }
 
     const data = await res.json()
@@ -198,23 +288,13 @@ ${emailsText}`,
     const jsonMatch = text.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Deduplicate by lowercased name
-        const seen = new Set<string>()
-        return parsed.filter((s: any) => {
-          if (!s.name || typeof s.price !== 'number') return false
-          const key = s.name.toLowerCase()
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-      }
+      if (Array.isArray(parsed)) return parsed
     }
   } catch (e) {
-    console.error('[SCAN] Claude error:', e)
+    console.error('[SCAN] Claude batch error:', e)
   }
 
-  return getDemoSubscriptions()
+  return []
 }
 
 function getDemoSubscriptions() {
@@ -223,8 +303,11 @@ function getDemoSubscriptions() {
     { name: 'Spotify Premium', price: 10.99, currency: 'EUR', period: 'monthly', category: 'Musica', confidence: 0.97 },
     { name: 'Amazon Prime', price: 49.90, currency: 'EUR', period: 'yearly', category: 'Compras', confidence: 0.95 },
     { name: 'Adobe Creative Cloud', price: 59.99, currency: 'EUR', period: 'monthly', category: 'Productividad', confidence: 0.92 },
-    { name: 'ChatGPT Plus', price: 20.00, currency: 'EUR', period: 'monthly', category: 'IA', confidence: 0.94 },
-    { name: 'iCloud+ 200GB', price: 2.99, currency: 'EUR', period: 'monthly', category: 'Cloud', confidence: 0.91 },
-    { name: 'YouTube Premium', price: 11.99, currency: 'EUR', period: 'monthly', category: 'Streaming', confidence: 0.96 },
+    { name: 'Claude Pro', price: 20.00, currency: 'USD', period: 'monthly', category: 'IA', confidence: 0.94 },
+    { name: 'ElevenLabs', price: 22.00, currency: 'USD', period: 'monthly', category: 'IA', confidence: 0.91 },
+    { name: 'Runway ML', price: 15.00, currency: 'USD', period: 'monthly', category: 'IA', confidence: 0.90 },
+    { name: 'Supabase Pro', price: 25.00, currency: 'USD', period: 'monthly', category: 'Cloud', confidence: 0.92 },
+    { name: 'HeyGen', price: 29.00, currency: 'USD', period: 'monthly', category: 'IA', confidence: 0.88 },
+    { name: 'Storyblocks', price: 99.00, currency: 'USD', period: 'yearly', category: 'Productividad', confidence: 0.93 },
   ]
 }
